@@ -7,7 +7,6 @@ import * as octokit from "octokit";
 import * as wholeAPI from './api';
 import * as maintain from './maintain';
 import { AutocompleteInput } from './autocomplete-input';
-import { MaintainPanel } from './maintain/ui';
 
 if (typeof window !== 'undefined') {
   window['atproto'] = atproto;
@@ -48,7 +47,7 @@ export function RootLayout({
                   executeCommand={executeCommand} />
                 {
                   !showUpdateDIDs ? undefined :
-                    <MaintainPanel />
+                    '<MaintainPanel />'
                 }
               </div>
             </div>

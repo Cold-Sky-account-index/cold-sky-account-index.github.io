@@ -2,15 +2,24 @@
 /// <reference path="../types.d.ts" />
 
 import React, { useEffect, useState } from 'react';
-import { isPromise } from '.';
+import { isPromise } from '../api';
+
+/**
+ * @template {any} TFrom
+ * @template {any} TTo
+ * @typedef {TTo |
+ *  Promise<TTo> | TTo[] | Iterable<TTo> | AsyncIterable<TTo> |
+ *  ((from: TFrom) => TSourceOf<TFrom, TTo>)
+ * } TSourceOf
+ */
 
 /**
  * @template {any} TFrom
  * @template {any} TTo
  * @param {TFrom} from
- * @param {Promise<TTo> | Iterable<TTo> | AsyncIterable<TTo> | ((from: TFrom) => TTo | Promise<TTo> | Iterable<TTo> | AsyncIterable<TTo>)} derive
+ * @param {TSourceOf<TFrom, TTo>} derive
  * @param {(error: any, from: TFrom) => TTo} [catchError]
- * @returns {TTo}
+ * @returns {Awaited<TTo>}
  */
 export function forAwait(from, derive, catchError) {
 

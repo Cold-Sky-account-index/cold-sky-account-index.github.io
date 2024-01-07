@@ -5,7 +5,6 @@ import atproto from '@atproto/api';
 import * as octokit from "octokit";
 
 import * as wholeAPI from './api';
-import * as maintain from './maintain';
 import { AutocompleteInput } from './autocomplete-input';
 
 if (typeof window !== 'undefined') {

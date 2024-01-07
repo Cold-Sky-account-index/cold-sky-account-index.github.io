@@ -1,2 +1,3 @@
 node_modules
-/static
+/static/index.js
+/static/index.css

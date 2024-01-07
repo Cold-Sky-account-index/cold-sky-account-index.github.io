@@ -4,7 +4,6 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { RootLayout } from './root-layout';
-import { nodeRunUpdateDIDs } from './maintain/node';
 
 
 class App extends React.Component {
@@ -29,4 +28,4 @@ function bootBrowser() {
 if (typeof window !== 'undefined' && window)
   bootBrowser();
 else if (typeof require === 'function' && typeof process !== 'undefined')
-  nodeRunUpdateDIDs();
+  console.log('REMOVED - nodeRunUpdateDIDs();');

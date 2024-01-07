@@ -11,7 +11,6 @@ if (typeof window !== 'undefined') {
   window['atproto'] = atproto;
   window['octokit'] = octokit;
   window['coldsky'] = wholeAPI;
-  Object.assign(window['coldsky'], maintain);
 }
 
 /**

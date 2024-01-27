@@ -155,7 +155,7 @@ function deriveMode(file, mode) {
 /**
  * @param {string | ArrayBuffer | Uint8Array} content
  */
-function toBase64(content) {
+export function toBase64(content) {
   if (typeof content === 'string') return btoa(content);
 
   const arr = content instanceof Uint8Array ? content : new Uint8Array(content);

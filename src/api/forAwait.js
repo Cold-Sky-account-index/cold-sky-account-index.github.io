@@ -30,6 +30,7 @@ export function forAwait(from, derive, catchError) {
     fromToken = state.from = { value: from };
     state.sync = true;
     state.to = {};
+    /** @param {() => void} [callback] */
     const run = (callback) => {
       if (!callback) return;
       if (state.sync) {

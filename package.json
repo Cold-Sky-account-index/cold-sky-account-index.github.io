@@ -2,7 +2,7 @@
   "name": "colds.ky",
   "version": "1.0.0",
   "private": true,
-  "description": "Social media out there: the Website",
+  "description": "Social media out there: Account index",
   "scripts": {
     "start": "esbuild src/app.js --target=es6 --bundle --sourcemap --outfile=./static/index.js --loader:.js=jsx --format=iife --external:fs --external:path --external:child_process --watch --serve --servedir=.",
     "build": "esbuild src/app.js --target=es6 --bundle --sourcemap --outfile=./static/index.js --loader:.js=jsx --format=iife --external:fs --external:path --external:child_process",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/colds-ky/colds.ky.git"
+    "url": "git+https://github.com/colds-ky-accounts/colds-ky-accounts.github.io"
   },
   "keywords": [
     "javascript",
@@ -20,10 +20,7 @@
   ],
   "author": "Oleg Mihailik",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/colds-ky/colds.ky/issues"
-  },
-  "homepage": "https://github.com/colds-ky/colds.ky#readme",
+  "homepage": "https://accounts.colds.ky/",
   "dependencies": {
     "@atproto/api": "^0.7.4",
     "@atproto/repo": "^0.3.6",
@@ -32,6 +29,7 @@
     "@mui/icons-material": "^5.15.0",
     "@mui/material": "^5.15.0",
     "@mui/styles": "^5.15.0",
+    "@octokit/rest": "^20.0.2",
     "esbuild": "^0.19.9",
     "octokit": "^3.1.2",
     "react": "^18.2.0",

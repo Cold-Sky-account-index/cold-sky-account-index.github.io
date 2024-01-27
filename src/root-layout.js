@@ -6,6 +6,7 @@ import * as octokit from "octokit";
 
 import * as wholeAPI from './api';
 import { AutocompleteInput } from './autocomplete-input';
+import { Link } from 'react-router-dom';
 
 if (typeof window !== 'undefined') {
   window['atproto'] = atproto;
@@ -35,6 +36,7 @@ export function RootLayout({
       <tbody>
         <tr>
           <td valign="middle" className="td-main">
+            <Link className='top-left-link' to='update'>Update index</Link>
             <div className="div-outer">
               <div className="div-inner">
                 <h1 className="title">{title ?? 'Cold Sky'}</h1>

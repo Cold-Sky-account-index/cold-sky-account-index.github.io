@@ -1,5 +1,6 @@
 <html>
 <head><title>Cold Sky</title>
+<base href="../">
 <style>
 html {
   background-color: white;
@@ -66,6 +67,32 @@ td.td-main {
   text-align: center;
 }
 
+.top-left-link {
+  position: absolute;
+  left: 0.25em;
+  top: 0.35em;
+  writing-mode: vertical-rl;
+  color: #1a4872;
+  padding: 0.6em 0.25em;
+  font-size: 110%;
+  background: #ffffff14;
+  border-radius: 1em;
+  border: solid 1px #ffffff17;
+  transition: background-color 200ms;
+}
+
+.top-left-link:hover {
+  background: #ffffff2e;
+  border: solid 1px #ffffff38;
+  border-left-color: #ffffff12;
+  border-top-color: #ffffff21;
+}
+
+.top-left-link:active {
+  background: #ffffff82;
+  border-color: #ffffffc7;
+}
+
 .div-outer {
   width: 90%; max-width: 749px; height: 90%; max-height: 585px;
   display: inline-block;
@@ -124,8 +151,6 @@ td.td-main {
   </tbody>
 </table>
 
-<script src="index.js">
-</script>
-<script src="executeSpecialCommand.js"></script>
+<script src="index.js"></script>
 </body>
 </html>

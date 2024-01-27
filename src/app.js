@@ -31,7 +31,7 @@ function bootBrowser() {
   const root = createRoot(reactRoot);
 
   const useHashRouter =
-    /file/i.test(location.protocol) || /(github\.dev)|127|localhost/i.test(location.hostname);
+    /file/i.test(location.protocol) || /127|localhost/i.test(location.hostname);
   const useRouter =
     useHashRouter ?
       createHashRouter : createBrowserRouter;

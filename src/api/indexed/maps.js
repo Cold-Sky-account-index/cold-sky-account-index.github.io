@@ -17,20 +17,20 @@ const originTimestamp = 20231216;
 /**
  * @returns {Promise<{ [letter: string]: LetterMap }>}
  */
-export function getMaps() {
-  const mapFetches = letters.split('').map(letter => fetch(`../${letter}/map.json`).then(re => 
+export async function getMaps() {
+  const mapFetches = letters.split('').map(letter => fetch(`../${letter}/map.json`).then(re =>
     re.status === 404 ? undefined : re.json()));
 
-  return Promise.all(mapFetches).then(maps => {
-    /** @type {{ [letter: string]: LetterMap }} */
-    const letterMap = {};
-    for (let i = 0; i < maps.length; i++) {
-      const map = convertStoredMapToLetterMap(maps[i]);
-      if (!map) continue;
-      letterMap[letters[i]] = map;
-    }
-    return letterMap;
-  });
+  const maps = await Promise.all(mapFetches);
+  /** @type {{ [letter: string]: LetterMap }} */
+  const letterMap = {};
+  for (let i = 0; i < maps.length; i++) {
+    if (!maps[i]) continue;
+    const map = convertStoredMapToLetterMap(maps[i]);
+    if (!map) continue;
+    letterMap[letters[i]] = map;
+  }
+  return letterMap;
 }
 
 /**

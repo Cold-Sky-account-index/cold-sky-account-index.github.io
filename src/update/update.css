@@ -1,0 +1,16 @@
+.update-bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: url(thames.jpg);
+  background-size: cover;
+
+  font-family: monospace;
+  font-size: 3vw;
+  text-shadow: 0 0.5px #fec746;
+
+  padding: 0.5em;
+}

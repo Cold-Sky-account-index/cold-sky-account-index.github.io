@@ -27,12 +27,12 @@ export function InitMissingMaps({ maps }) {
     <>
       <h2>Account index:
         {
-          !mapCount ? undefined : <>{mapCount} maps exist,</>
+          !mapCount ? undefined : <>{mapCount} maps exist </>
         }
-      {
-          !mapsState ? undefined :
-            <>{mapsState.pending} to go</>
-      }
+        {
+            !mapsState ? <> prepping the maps...</> :
+              <> {mapsState.pending} to go...</>
+        }
       </h2>
       <Button variant='contained' onClick={() => {
         mapsState?.applyWithAuth(auth);
@@ -49,25 +49,15 @@ export function InitMissingMaps({ maps }) {
               <span
                 className='letter-state'
                 title={map.state === 'error' ? map.error.stack : undefined}
-                key={map.letter}>{map.letter} <b>{map.state} </b>
+                key={map.letter}>
+                {map.letter} <b>{map.state || 'OK'}</b>
+                {map.state !== 'fetching' ? undefined : (/** @type {*} */(map)?.progress * 100).toFixed() + '%'}
+                {' '}
               </span>
             )
           }
         </div>
       }
-    </>
-  );
-}
-
-export function AuthEntry({ auth, setAuth, disabled, onStart }) {
-  return (
-    <>
-      <Button variant='contained' onClick={onStart}>Start</Button>
-      <TextField
-        label='GitHub auth token'
-        autoComplete='on'
-        value={auth}
-        onChange={e => setAuth(e.target.value)} />
     </>
   );
 }
@@ -86,6 +76,7 @@ async function* updateMaps(maps) {
     /**
      * @type {(
      *  (import('../api/indexed/maps').LetterMap & {state?: undefined }) |
+     *  (import('../api/indexed/maps').LetterMap & {state: 'fetching', progress: number }) |
      *  (import('../api/indexed/maps').LetterMap & {state: 'new' }) |
      *  (import('../api/indexed/maps').LetterMap & {state: 'error', error: Error }) |
      *  (import('../api/indexed/maps').LetterMap & {state: 'updated' }) |
@@ -108,12 +99,18 @@ async function* updateMaps(maps) {
     pending++;
     const index = letters.indexOf(letter);
 
-    const result = { letter, state: 'fetching' };
+    const result = { letter, state: 'fetching', progress: 0 };
     startFetching();
     return result;
 
     async function startFetching() {
-      const newMap = await createOriginalMap(letter);
+      let finished = false;
+      const newMap = await createOriginalMap(letter, ({ pending, complete }) => {
+        if (finished) return;
+        result.progress = complete / (pending + complete);
+        yieldResolve();
+      });
+      finished = true;
       state[index] = /** @type {*} */({ ...newMap, state: 'new' });
       yieldResolve();
 

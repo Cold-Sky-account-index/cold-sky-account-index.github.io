@@ -18,8 +18,17 @@ import { toBase64, webcommit } from '../webcommit';
  * @typedef {{
  *    loaded: LetterMap[],
  *    errors: { letter: string, error: Error }[],
- *    pending: string[]
+ *    pending: string[],
+ *    byLetter: { [letter: string]: LoadingLetterMapProgress }
  *  }} Progress
+ */
+
+/**
+ * @typedef {{letter: string, state: 'loaded', map: LetterMap} |
+ * { letter: string, state: 'loading', promise: Promise } |
+ * { letter: string, state: 'error', error: Error } |
+ * { letter: string, state: 'missing' }
+ * } LoadingLetterMapProgress
  */
 
 const originTimestamp = 20231216;
@@ -30,28 +39,30 @@ const originTimestamp = 20231216;
  */
 export async function getMaps(onprogress) {
   let completed = 0;
-  /** @type {(Promise | LetterMap | undefined | { letter: string, error: Error })[]} */
-  const mapFetches = letters.split('').map(loadLetterMap);
-
-  await Promise.all(mapFetches);
+  /** @type {LoadingLetterMapProgress[]} */
+  const mapFetches = letters.split('').map(letter => ({ letter, state: 'loading', promise: loadLetterMap(letter) }));
+  await Promise.all(mapFetches.map(f => f.state === 'loading' ? f.promise : undefined));
 
   /** @type {{ [letter: string]: LetterMap }} */
   const letterMap = {};
   for (let i = 0; i < letters.length; i++) {
     const entry = mapFetches[i];
-    if (/** @type {*} */(entry)?.error) continue;
-    letterMap[letters[i]] = /** @type {LetterMap} */(entry);
+    if (entry.state !== 'loaded') continue;
+    letterMap[letters[i]] = entry.map;
   }
 
   return letterMap;
 
-  /** @param {string} letter @param {number} index */
-  async function loadLetterMap(letter, index) {
+  /** @param {string} letter */
+  async function loadLetterMap(letter) {
+    const letterIndex = letter.charCodeAt(0) - letters.charCodeAt(0);
     try {
       const result = await loadLetterMapCore(letter);
-      mapFetches[index] = result;
+      mapFetches[letterIndex] = result ?
+        { letter, state: 'loaded', map: result } :
+        { letter, state: 'missing' };
     } catch (error) {
-      mapFetches[index] = { letter, error };
+      mapFetches[letterIndex] = { letter, state: 'error', error };
     }
 
     completed++;
@@ -74,14 +85,19 @@ export async function getMaps(onprogress) {
     const loaded = [];
     const errors = [];
     const pending = [];
+    /** @type {{ [letter: string]: LoadingLetterMapProgress }} */
+    const byLetter = {};
     for (let i = 0; i < letters.length; i++) {
+      const letter = letters[i];
       const entry = mapFetches[i];
-      if (!entry) continue;
-      if (isPromise(entry)) pending.push(letters[i]);
-      else if (/** @type {*} */(entry).error) errors.push(entry);
-      else if (entry) loaded.push(entry);
+      byLetter[letter] = entry;
+      switch (entry.state) {
+        case 'loading': pending.push(letter); break;
+        case 'loaded': loaded.push(entry.map); break;
+        case 'error': errors.push(entry); break;
+      }
     }
-    onprogress(/** @type {*} */({ loaded, errors, pending }));
+    onprogress({ loaded, errors, pending, byLetter });
   }
 }
 
@@ -116,16 +132,19 @@ export function convertLetterMapToStoredMap(letterMap) {
 /** @type {typeof fetch} */
 const bucketFetch = throttledAsyncCache(fetch);
 
-/** @param {string} letter */
-export async function createOriginalMap(letter) {
+/** @param {string} letter @param {({pending, complete}) => void} [onprogress] */
+export async function createOriginalMap(letter, onprogress) {
   if (letters.indexOf(letter) < 0) throw new Error(`Invalid letter: ${letter}`);
 
   const map = /** @type {LetterMap} */({ letter });
 
   /** @type {Promise[]} */
   const parallel = [];
+  let pending = 0;
+  let complete = 0;
   for (const secondLetter of letters) {
     for (const thirdLetter of letters) {
+      pending++;
       parallel.push(createOriginalMapFor(secondLetter, thirdLetter));
     }
   }
@@ -150,6 +169,10 @@ export async function createOriginalMap(letter) {
       if (entry) entry.prefixes.push(prefix);
       else map[shortDID] = { timestamp: originTimestamp, prefixes: [prefix] };
     }
+    complete++;
+
+    if (typeof onprogress !== 'function') return;
+    onprogress({ pending, complete });
   }
 }
 

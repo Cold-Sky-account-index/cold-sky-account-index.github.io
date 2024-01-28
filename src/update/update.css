@@ -11,8 +11,18 @@
   font-family: monospace;
   font-size: 3vw;
   text-shadow: 0 0.5px #fec746;
+}
 
-  padding: 0.5em;
+@media (max-width: 700px) {
+  .update-bg h2 {
+    font-size: 6vw;
+  }
+}
+
+@media (max-width: 800px) {
+  .update-bg h2 {
+    font-size: 8vw;
+  }
 }
 
 .letter-state {

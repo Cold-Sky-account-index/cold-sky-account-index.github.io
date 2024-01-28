@@ -1,0 +1,68 @@
+.letter-layout {
+  position: absolute;
+  left: 0; top: 0; width: 100%; height: 100%;
+
+  display: grid;
+  grid-template-columns: auto repeat(26, 1fr) auto;
+  grid-template-rows: auto auto auto 1fr auto;
+}
+
+.letter-layout .letter-layout-title {
+  grid-row: 1;
+  grid-column: 1 / 28;
+  padding-left: 0.5em;
+}
+
+.letter-layout .letter-layout-subtitle {
+  grid-row: 2;
+  grid-column: 1 / 28;
+  padding-left: 0.5em;
+}
+.letter-layout .letter-layout-header-letter {
+  grid-row: 3;
+  text-align: center;
+}
+
+.letter-layout .letter-layout-header-letter-a, .letter-layout .letter-layout-content-letter-a { grid-column: 2 / 3; }
+.letter-layout .letter-layout-header-letter-b, .letter-layout .letter-layout-content-letter-b { grid-column: 3 / 4; }
+.letter-layout .letter-layout-header-letter-c, .letter-layout .letter-layout-content-letter-c { grid-column: 4 / 5; }
+.letter-layout .letter-layout-header-letter-d, .letter-layout .letter-layout-content-letter-d { grid-column: 5 / 6; }
+.letter-layout .letter-layout-header-letter-e, .letter-layout .letter-layout-content-letter-e { grid-column: 6 / 7; }
+.letter-layout .letter-layout-header-letter-f, .letter-layout .letter-layout-content-letter-f { grid-column: 7 / 8; }
+.letter-layout .letter-layout-header-letter-g, .letter-layout .letter-layout-content-letter-g { grid-column: 8 / 9; }
+.letter-layout .letter-layout-header-letter-h, .letter-layout .letter-layout-content-letter-h { grid-column: 9 / 10; }
+.letter-layout .letter-layout-header-letter-i, .letter-layout .letter-layout-content-letter-i { grid-column: 10 / 11; }
+.letter-layout .letter-layout-header-letter-j, .letter-layout .letter-layout-content-letter-j { grid-column: 11 / 12; }
+.letter-layout .letter-layout-header-letter-k, .letter-layout .letter-layout-content-letter-k { grid-column: 12 / 13; }
+.letter-layout .letter-layout-header-letter-l, .letter-layout .letter-layout-content-letter-l { grid-column: 13 / 14; }
+.letter-layout .letter-layout-header-letter-m, .letter-layout .letter-layout-content-letter-m { grid-column: 14 / 15; }
+.letter-layout .letter-layout-header-letter-n, .letter-layout .letter-layout-content-letter-n { grid-column: 15 / 16; }
+.letter-layout .letter-layout-header-letter-o, .letter-layout .letter-layout-content-letter-o { grid-column: 16 / 17; }
+.letter-layout .letter-layout-header-letter-p, .letter-layout .letter-layout-content-letter-p { grid-column: 17 / 18; }
+.letter-layout .letter-layout-header-letter-q, .letter-layout .letter-layout-content-letter-q { grid-column: 18 / 19; }
+.letter-layout .letter-layout-header-letter-r, .letter-layout .letter-layout-content-letter-r { grid-column: 19 / 20; }
+.letter-layout .letter-layout-header-letter-s, .letter-layout .letter-layout-content-letter-s { grid-column: 20 / 21; }
+.letter-layout .letter-layout-header-letter-t, .letter-layout .letter-layout-content-letter-t { grid-column: 21 / 22; }
+.letter-layout .letter-layout-header-letter-u, .letter-layout .letter-layout-content-letter-u { grid-column: 22 / 23; }
+.letter-layout .letter-layout-header-letter-v, .letter-layout .letter-layout-content-letter-v { grid-column: 23 / 24; }
+.letter-layout .letter-layout-header-letter-w, .letter-layout .letter-layout-content-letter-w { grid-column: 24 / 25; }
+.letter-layout .letter-layout-header-letter-x, .letter-layout .letter-layout-content-letter-x { grid-column: 25 / 26; }
+.letter-layout .letter-layout-header-letter-y, .letter-layout .letter-layout-content-letter-y { grid-column: 26 / 27; }
+.letter-layout .letter-layout-header-letter-z, .letter-layout .letter-layout-content-letter-z { grid-column: 27 / 28; }
+
+.letter-layout .letter-layout-content-letter {
+  grid-row: 4;
+}
+
+.letter-layout .letter-layout-status {
+  grid-row: 5;
+  grid-column: 1 / 28;
+  padding: 0.2em 0.5em;
+  font-family: sans-serif;
+  font-size: 10pt;
+  font-weight: 100;
+  color: #7dbcdd;
+  text-shadow: none;
+  padding-top: 1em;
+  background: linear-gradient(to bottom, transparent, #0d2248);
+}

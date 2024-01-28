@@ -13,7 +13,8 @@ export function LoadingMaps({ progress }) {
       subtitle={
         !progress ? undefined :
           <>{progress.pending.length} to go</>
-      }>
+      }
+      status='Loading index maps.'>
       {
         ({ letter }) => {
           const letterProgress = progress?.byLetter[letter];
@@ -41,7 +42,7 @@ export function LetterProgress({ letterProgress }) {
     case 'loaded':
       return (
         <div style={{ writingMode: 'vertical-rl', fontSize: '80%', textShadow: 'none', paddingTop: '1em' }}>
-          {Object.keys(letterProgress.map).length} entries
+          {Object.keys(letterProgress.map).length.toLocaleString()} entries
         </div>
       );
   }

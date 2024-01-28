@@ -1,0 +1,21 @@
+.auth-entry {
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: auto 1fr;
+  grid-gap: 0.4em;
+  align-items: center;
+  justify-items: start;
+  padding-right: 2em;
+  padding-left: 1em;
+  padding-bottom: 0.6em;
+}
+
+.auth-entry-start-button-label {
+  font-size: 0.7rem;
+  padding: 0.25em;
+}
+
+.auth-entry-input-label {
+  font-size: 0.8rem;
+  text-shadow: none;
+}

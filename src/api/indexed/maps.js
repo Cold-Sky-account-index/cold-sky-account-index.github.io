@@ -6,12 +6,12 @@ import { throttledAsyncCache } from '../throttled-async-cache';
 import { toBase64, webcommit } from '../webcommit';
 
 /**
- * @typedef {{
+ * @typedef {{ letter: string } & {
  *  [shortDID: string]: {
  *    timestamp: number,
  *    prefixes: string[]
  *  }
- * } & { letter: string }} LetterMap
+ * }} LetterMap
  */
 
 /**

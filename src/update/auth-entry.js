@@ -1,7 +1,9 @@
 // @ts-check
 
-import { Button, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
+import { Button, TextField } from '@mui/material';
+
+import './auth-entry.css';
 
 /**
  * @param {{
@@ -12,16 +14,22 @@ import React, { useEffect, useState } from 'react';
 export function AuthEntry({ disabled, onStart }) {
   const [auth, setAuth] = useState(getStoredAuth);
   return (
-    <>
-      <Button variant='contained' onClick={() => onStart(
-        auth === KEY_EMOJI ? getLocalStorageAuthActual() || '' : auth)
-      }>Start</Button>
+    <span className='auth-entry'>
+      <Button
+        variant='contained'
+        disabled={disabled}
+        onClick={() => onStart(
+          auth === KEY_EMOJI ? getLocalStorageAuthActual() || '' : auth)}>
+        <span className='auth-entry-start-button-label'>Save</span>
+      </Button>
       <TextField
-        label='GitHub auth token'
+        label={<span className='auth-entry-input-label'>GitHub auth token</span>}
         autoComplete='on'
+        size='small'
         value={auth}
+        disabled={disabled}
         onChange={e => setAuth(e.target.value)} />
-    </>
+    </span>
   );
 }
 

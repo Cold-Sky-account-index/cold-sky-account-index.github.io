@@ -10,13 +10,15 @@
 .letter-layout .letter-layout-title {
   grid-row: 1;
   grid-column: 1 / 28;
-  padding-left: 0.5em;
+  padding: 0.15em 0.5em;
+  margin: 0;
 }
 
 .letter-layout .letter-layout-subtitle {
   grid-row: 2;
   grid-column: 1 / 28;
   padding-left: 0.5em;
+  font-size: 90%;
 }
 .letter-layout .letter-layout-header-letter {
   grid-row: 3;

@@ -2,14 +2,15 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { letters } from '../api/indexed';
-import './indexing.css';
-import { LetterLayout } from './letter-layout';
+import { getPrefixes } from '../api/indexed/maps';
 import { AuthEntry } from './auth-entry';
+import { LetterLayout } from './letter-layout';
+
+import './indexing.css';
 
 /**
  * @param {{
- *  maps: { [letter: string]: import('../api/indexed/maps').LetterMap }
+ *  maps: { [letter: string]: import('../api/indexed/maps').CompactMap }
  * }} _ 
  */
 export function Indexing({ maps }) {
@@ -24,13 +25,17 @@ export function Indexing({ maps }) {
   const [didsPrefixes, average] = useMemo(() => {
     /** @type {Map<string, string[]>} */
     const allDids = new Map();
-    for (const map of Object.values(maps)) {
+    for (const letter of Object.keys(maps)) {
+      const map = maps[letter];
       for (const shortDID of Object.keys(map)) {
         if (shortDID === 'letter') continue;
         let prefixes = allDids.get(shortDID);
         if (!prefixes) allDids.set(shortDID, prefixes = []);
-        for (const prefix of map[shortDID].prefixes) {
-          prefixes.push(map.letter + prefix);
+        const mapPrefixes = getPrefixes(shortDID, letter, map);
+        if (mapPrefixes) {
+          for (const prefix of mapPrefixes) {
+            prefixes.push(map.letter + prefix);
+          }
         }
       }
     }
@@ -56,15 +61,15 @@ export function Indexing({ maps }) {
   );
 }
 
-/** @param {{ map: import('../api/indexed/maps').LetterMap }} _ */
+/** @param {{ map: import('../api/indexed/maps').CompactMap }} _ */
 function LetterMapStatus({ map }) {
   const keys = useMemo(() => Object.keys(map).sort(), [map]);
 
   return (
     <div style={{ writingMode: 'vertical-rl', fontSize: '80%', textShadow: 'none', paddingTop: '1em' }}>
-      {map.letter}{map[keys[0]].prefixes[0]}
+      {map.letter}{map[keys[0]]?.slice(0, 2)}
       ... {keys.length.toLocaleString()} ...
-      {map.letter}{map[keys[keys.length-1]].prefixes[0]}
+      {map.letter}{map[keys[keys.length-1]]?.slice(-2)}
     </div>
   );
 }

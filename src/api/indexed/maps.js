@@ -1,12 +1,12 @@
 // @ts-check
 
 import { letters } from '.';
-import { isPromise } from '..';
+import { isPromise, resolveHandleOrDID } from '..';
 import { throttledAsyncCache } from '../throttled-async-cache';
 import { toBase64, webcommit } from '../webcommit';
 
 /**
- * @typedef {{ letter: string } & {
+ * @typedef {{ letter: string, a?: undefined } & {
  *  [shortDID: string]: {
  *    timestamp: number,
  *    prefixes: string[]
@@ -15,16 +15,32 @@ import { toBase64, webcommit } from '../webcommit';
  */
 
 /**
+ * @typedef { 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' |
+ * 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' |
+ * 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z'
+ * } Letter
+ */
+
+/**
  * @typedef {{
- *    loaded: LetterMap[],
- *    errors: { letter: string, error: Error }[],
+ *  letter?: undefined,
+ *  [shortDID: string]: string | undefined
+ * }} CompactMap
+ */
+
+/**
+ * @template [TMap=LetterMap]
+ * @typedef {{
+ *    loaded: string[],
+ *    errors: string[],
  *    pending: string[],
- *    byLetter: { [letter: string]: LoadingLetterMapProgress }
+ *    byLetter: { [letter: string]: LoadingLetterMapProgress<TMap> }
  *  }} Progress
  */
 
 /**
- * @typedef {{letter: string, state: 'loaded', map: LetterMap} |
+ * @template [TMap=LetterMap]
+ * @typedef {{letter: string, state: 'loaded', map: TMap} |
  * { letter: string, state: 'loading', promise: Promise } |
  * { letter: string, state: 'error', error: Error } |
  * { letter: string, state: 'missing' }
@@ -93,12 +109,111 @@ export async function getMaps(onprogress) {
       byLetter[letter] = entry;
       switch (entry.state) {
         case 'loading': pending.push(letter); break;
-        case 'loaded': loaded.push(entry.map); break;
-        case 'error': errors.push(entry); break;
+        case 'loaded': loaded.push(entry.letter); break;
+        case 'error': errors.push(entry.letter); break;
       }
     }
     onprogress({ loaded, errors, pending, byLetter });
   }
+}
+
+/**
+ * @param {(progress: Progress<CompactMap>) => void} [onprogress]
+ * @returns {Promise<{ [letter: string]: CompactMap }>}
+ */
+export async function getCompactMaps(onprogress) {
+  let completed = 0;
+  /** @type {LoadingLetterMapProgress<CompactMap>[]} */
+  const mapFetches = letters.split('').map(letter => ({ letter, state: 'loading', promise: loadLetterMap(letter) }));
+  await Promise.all(mapFetches.map(f => f.state === 'loading' ? f.promise : undefined));
+
+  /** @type {{ [letter: string]: CompactMap }} */
+  const letterMap = {};
+  for (let i = 0; i < letters.length; i++) {
+    const entry = mapFetches[i];
+    if (entry.state !== 'loaded') continue;
+    letterMap[letters[i]] = entry.map;
+  }
+
+  return letterMap;
+
+  /** @param {string} letter */
+  async function loadLetterMap(letter) {
+    const letterIndex = letter.charCodeAt(0) - letters.charCodeAt(0);
+    try {
+      const result = await loadLetterMapCore(letter);
+      mapFetches[letterIndex] = result ?
+        { letter, state: 'loaded', map: result } :
+        { letter, state: 'missing' };
+    } catch (error) {
+      mapFetches[letterIndex] = { letter, state: 'error', error };
+    }
+
+    completed++;
+    updateProgress();
+  }
+
+  /** @param {string} letter */
+  async function loadLetterMapCore(letter) {
+    const url = `https://accounts.colds.ky/${letter}/map.json`;
+    const re = await fetch(url);
+    if (re.status === 404) return;
+    const storedMap = await re.json();
+    const map = convertStoredMapToCompactMap(storedMap);
+    return map;
+  }
+
+  function updateProgress() {
+    if (completed === letters.length) return;
+    if (typeof onprogress !== 'function') return;
+    const loaded = [];
+    const errors = [];
+    const pending = [];
+    /** @type {{ [letter: string]: LoadingLetterMapProgress<CompactMap> }} */
+    const byLetter = {};
+    for (let i = 0; i < letters.length; i++) {
+      const letter = letters[i];
+      const entry = mapFetches[i];
+      byLetter[letter] = entry;
+      switch (entry.state) {
+        case 'loading': pending.push(letter); break;
+        case 'loaded': loaded.push(entry.letter); break;
+        case 'error': errors.push(entry.letter); break;
+      }
+    }
+    onprogress({ loaded, errors, pending, byLetter });
+  }
+}
+
+/**
+ * @param {string} shortDID
+ * @param {string} firstLetter
+ * @param {CompactMap} compactMap
+ */
+export function getPrefixes(shortDID, firstLetter, compactMap) {
+  const entry = compactMap[shortDID];
+  if (!entry) return;
+  if (entry.length === 2) return [firstLetter + entry];
+  const prefixes = [];
+  for (let i = 0; i < entry.length; i += 2) {
+    prefixes.push(firstLetter + entry.slice(i, i + 2));
+  }
+  return prefixes;
+}
+
+/**
+ * @param {LetterMap} oldMap
+ * @returns {CompactMap}
+ */
+export function convertOldLetterMapToCompactLetterMap(oldMap) {
+  /** @type {CompactMap} */
+  const compactMap = {};
+  for (const shortDID in oldMap) {
+    if (shortDID === 'letter') continue;
+    const entry = oldMap[shortDID];
+    compactMap[shortDID] = entry.prefixes.join(',');
+  }
+  return compactMap;
 }
 
 /**
@@ -114,6 +229,22 @@ export function convertStoredMapToLetterMap(letter, storedMap) {
     letterMap[shortDID] = { timestamp: timestamp, prefixes: prefixes.slice(1) };
   }
   return letterMap;
+}
+
+/**
+ * @param {CompactMap | { [shortDID: string]: [timestamp: string, ...prefixes: string[]] }} storedMap
+ * @returns {CompactMap}
+ */
+export function convertStoredMapToCompactMap(storedMap) {
+  /** @type {CompactMap | undefined} */
+  let compactMap;
+  for (const shortDID in storedMap) {
+    const val = storedMap[shortDID];
+    if (typeof val === 'string') return /** @type {CompactMap} */(storedMap);
+    if (!compactMap) compactMap = {};
+    compactMap[shortDID] = val?.slice(1).join(',');
+  }
+  return /** @type {CompactMap} */(compactMap);
 }
 
 /** @param {LetterMap} letterMap */
@@ -215,4 +346,51 @@ export async function storeNewMap({ letter, map, auth }) {
   //   });
 
   // await createOrUpdateRequest;
+}
+
+/**
+ * @param {string} shortDID
+ * @param {LetterMap[]} maps
+ */
+export async function reindexAccount(shortDID, maps) {
+  const profile = await resolveHandleOrDID(shortDID);
+  if (!profile) return;
+
+  const prefixes = [];
+  if (profile.shortHandle) getWordStartsLowerCase(profile.shortHandle, prefixes);
+  if (profile.displayName) getWordStartsLowerCase(profile.displayName, prefixes);
+  prefixes.sort();
+
+  const bucketPrefixes = {};
+  for (const pre of prefixes) {
+    const letter = pre.charAt(0);
+    const bucketPre = pre.slice(1);
+    const list = bucketPrefixes[letter];
+    if (list) list.push(bucketPre);
+    else bucketPrefixes[letter] = [bucketPre];
+  }
+
+  let updatedBuckets
+  for (const letter in bucketPrefixes) {
+    const bucket = maps[letter];
+    // if (!bucket) {
+    //   maps[bucket] = bucket = /** @type {LetterMap} */({ letter });
+    // }
+  }
+
+}
+
+const wordStartRegExp = /[A-Z]*[a-z]*/g;
+/** @param {string} str @param {string[]} wordStarts */
+export function getWordStartsLowerCase(str, wordStarts = []) {
+  if (!wordStarts) wordStarts = [];
+
+  str.replace(wordStartRegExp, function (match) {
+    const wordStart = match?.slice(0, 3).toLowerCase();
+    if (wordStart?.length === 3 && wordStarts.indexOf(wordStart) < 0)
+      wordStarts.push(wordStart);
+    return match;
+  });
+
+  return wordStarts;
 }

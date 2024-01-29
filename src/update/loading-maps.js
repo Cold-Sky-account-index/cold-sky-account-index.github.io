@@ -4,7 +4,7 @@ import React from 'react';
 
 import { LetterLayout } from './letter-layout';
 
-/** @param {{ progress?: import('../api/indexed/maps').Progress }} _ */
+/** @param {{ progress?: import('../api/indexed/maps').Progress<import('../api/indexed/maps').CompactMap> }} _ */
 export function LoadingMaps({ progress }) {
   console.log('<LoadingMaps ', progress, '>');
   return (
@@ -25,7 +25,7 @@ export function LoadingMaps({ progress }) {
   );
 }
 
-/** @param {{ letterProgress: import('../api/indexed/maps').LoadingLetterMapProgress | undefined }} _ */
+/** @param {{ letterProgress: import('../api/indexed/maps').LoadingLetterMapProgress<import('../api/indexed/maps').CompactMap> | undefined }} _ */
 export function LetterProgress({ letterProgress }) {
   console.log('letterProgress', letterProgress);
   switch (letterProgress?.state) {

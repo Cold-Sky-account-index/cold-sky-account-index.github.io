@@ -1,3 +1,3 @@
 // @ts-check
 
-export const letters = 'abcdefghijklmnopqrstuvwxyz';
+export const letters = /** @type {string & Iterable<import('./maps').Letter>} */('abcdefghijklmnopqrstuvwxyz');

@@ -4,8 +4,8 @@
   "private": true,
   "description": "Social media out there: Account index",
   "scripts": {
-    "start": "esbuild src/app.js --target=es6 --bundle --sourcemap --outfile=./static/index.js --loader:.js=jsx --format=iife --external:fs --external:path --external:child_process --external:thames.jpg --watch --serve --servedir=static",
-    "build": "esbuild src/app.js --target=es6 --bundle --sourcemap --outfile=./static/index.js --loader:.js=jsx --format=iife --external:fs --external:path --external:child_process --external:thames.jpg",
+    "start": "esbuild src/app.js --target=es6 --bundle --sourcemap --outfile=./static/index.js --loader:.js=jsx --format=iife --external:fs --external:path --external:child_process --external:ws --external:thames.jpg --watch --serve --servedir=static",
+    "build": "esbuild src/app.js --target=es6 --bundle --sourcemap --outfile=./static/index.js --loader:.js=jsx --format=iife --external:fs --external:path --external:child_process --external:ws --external:thames.jpg",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

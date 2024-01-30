@@ -156,7 +156,12 @@ export async function getCompactMaps(onprogress) {
   /** @param {string} letter */
   async function loadLetterMapCore(letter) {
     const url = `https://accounts.colds.ky/${letter}/map.json`;
-    const re = await fetch(url);
+    try {
+      var re = await fetch(url);
+    } catch (potentiallyCors) {
+      re = await fetch('https://corsproxy.io/?' + url);
+    }
+
     if (re.status === 404) return;
     const storedMap = await re.json();
     const map = convertStoredMapToCompactMap(storedMap);
@@ -381,8 +386,10 @@ export async function reindexAccount(shortDID, maps) {
 }
 
 const wordStartRegExp = /[A-Z]*[a-z]*/g;
-/** @param {string} str @param {string[]} wordStarts */
+/** @param {string | null | undefined} str @param {string[]} wordStarts */
 export function getWordStartsLowerCase(str, wordStarts = []) {
+  if (!str) return wordStarts || [];
+
   if (!wordStarts) wordStarts = [];
 
   str.replace(wordStartRegExp, function (match) {

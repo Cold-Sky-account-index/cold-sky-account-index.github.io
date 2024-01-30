@@ -1,0 +1,40 @@
+.letter-indexing-progress-status {
+  width: 100%;
+  height: 100%;
+
+  font-size: 80%;
+
+  text-shadow: none;
+
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  grid-gap: 1em;
+}
+
+.letter-indexing-progress-status>* {
+  writing-mode: vertical-rl;
+}
+
+.letter-indexing-progress-status .letter-indexing-progress-status-preexisting {
+  grid-row: 1;
+}
+
+.letter-indexing-progress-status .letter-indexing-progress-status-updates {
+  grid-row: 2;
+  color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.letter-indexing-progress-status .letter-indexing-progress-status-updates b {
+  text-shadow: 0 0 7px #ffd373;
+}
+
+.letter-indexing-progress-status .letter-indexing-progress-status-updates-removals {
+  color: rgb(255, 133, 111);
+}
+
+.letter-indexing-progress-status .letter-indexing-progress-status-accumulated {
+  grid-row: 3;
+  color: rgb(159, 255, 255);
+}

@@ -2,15 +2,13 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { resolveHandleOrDID, shortenDID } from '../api';
-import { firehose } from '../api/firehose';
 import { forAwait } from '../api/forAwait';
-import { getPrefixes, getWordStartsLowerCase } from '../api/indexed/maps';
+import { getPrefixes } from '../api/indexed/maps';
 import { AuthEntry } from './auth-entry';
 import { LetterLayout } from './letter-layout';
 
 import './indexing.css';
-import { letters } from '../api/indexed';
+import { runFirehoseAndUpdate } from '../api/indexed';
 
 /**
  * @param {{
@@ -62,7 +60,7 @@ export function Indexing({ maps }) {
   }, [maps]);
 
   const [lastUpdateState] = useState({
-    /** @type {Partial<Record<import('../api/indexed/maps').Letter, IndexUpdate>> | undefined} */
+    /** @type {Partial<Record<import('../api/indexed').Letter, import('../api/indexed').IndexUpdate>> | undefined} */
     lastUpdate: undefined
   });
 
@@ -97,8 +95,8 @@ export function Indexing({ maps }) {
 /**
  * @param {{
  *  map: import('../api/indexed/maps').CompactMap,
- *  progressAll?: IndexUpdate[],
- *  progressLatest?: IndexUpdate
+ *  progressAll?: import('../api/indexed').IndexUpdate[],
+ *  progressLatest?: import('../api/indexed').IndexUpdate
  * }} _
  */
 function LetterMapStatus({ map, progressAll, progressLatest }) {
@@ -130,138 +128,4 @@ function LetterMapStatus({ map, progressAll, progressLatest }) {
       </div>
     </div>
   );
-}
-
-/**
- * @typedef {{
-   *  letter: import('../api/indexed/maps').Letter,
-   *  shortDID: string,
-   *  value: string | [handle: string, displayName: string],
-   *  prefixes: string
-   * }} IndexUpdate
- */
-
-/**
- * @param {{ [letter: string]: import('../api/indexed/maps').CompactMap }} maps
- */
-async function* runFirehoseAndUpdate(maps) {
-  /** @type {IndexUpdate[]} */
-  const allIndexUpdates = [];
-  /** @type {Partial<Record<import('../api/indexed/maps').Letter, IndexUpdate[]>>}*/
-  const allIndexUpdatesByLetter = {};
-
-  const recentShortDIDs = {};
-
-  for await (const block of firehose()) {
-    if (!block?.length) continue;
-
-    for (const entry of block) {
-      if (!entry.messages?.length) continue;
-
-      for (const msg of entry.messages) {
-        if (msg.$type !== 'app.bsky.graph.follow') continue;
-        if (!msg.repo) continue;
-
-        const shortDID = shortenDID(msg.repo);
-        if (!shortDID || recentShortDIDs[shortDID]) continue;
-        recentShortDIDs[shortDID] = true;
-
-        yield {
-          shortDID,
-          all: allIndexUpdates, allByLetter: allIndexUpdatesByLetter,
-          accountUpdates: undefined
-        };
-
-        /** @type {AccountInfo} */
-        let accountDetails;
-        try {
-          accountDetails = await resolveHandleOrDID(shortDID);
-        } catch (resolveError) {
-          console.error('Failed to resolve DID', shortDID, resolveError);
-          continue;
-        }
-
-        const accountUpdates = indexAccountData(accountDetails);
-
-        let anyChanges = false;
-
-        for (const letter of letters) {
-          const oldPrefixes = maps[letter][shortDID];
-          if (!oldPrefixes) continue;
-          const letterUpdate = accountUpdates.byLetter[letter];
-          if (!letterUpdate) {
-            const removeUpdate = {
-              letter,
-              shortDID,
-              value: accountUpdates.list[0].value,
-              prefixes: ''
-            };
-            allIndexUpdates.push(removeUpdate);
-
-            const allByLetter = allIndexUpdatesByLetter[removeUpdate.letter] || (allIndexUpdatesByLetter[removeUpdate.letter] = []);
-            allByLetter.push(removeUpdate);
-
-            anyChanges = true;
-          }
-        }
-
-        for (const update of accountUpdates.list) {
-          const oldPrefixes = maps[update.letter][shortDID];
-          if (oldPrefixes && oldPrefixes === update.prefixes) continue;
-
-          allIndexUpdates.push(update);
-          const allByLetter = allIndexUpdatesByLetter[update.letter] || (allIndexUpdatesByLetter[update.letter] = []);
-          allByLetter.push(update);
-          anyChanges = true;
-        }
-
-        if (!anyChanges) {
-          console.log('No changes for ', shortDID, accountUpdates);
-          continue;
-        }
-
-        yield {
-          shortDID,
-          all: allIndexUpdates, allByLetter: allIndexUpdatesByLetter,
-          accountUpdates
-        };
-      }
-    }
-  }
-}
-
-/**
- * @param {AccountInfo} accountDetails
- */
-function indexAccountData(accountDetails) {
-  /** @type {IndexUpdate[]} */
-  const updateList = [];
-  /** @type {Partial<Record<import('../api/indexed/maps').Letter, IndexUpdate>>} */
-  const updateByLetter = {};
-
-  /** @type {string | [string, string]} */
-  const value = accountDetails.displayName ? [accountDetails.shortHandle, accountDetails.displayName] : accountDetails.shortHandle;
-
-  /** @type {string[]} */
-  const wordStarts = [];
-  getWordStartsLowerCase(accountDetails.shortHandle, wordStarts);
-  getWordStartsLowerCase(accountDetails.displayName, wordStarts);
-
-  for (const prefix of wordStarts) {
-    const letter = /** @type {import('../api/indexed/maps').Letter} */(prefix[0]);
-    let letterUpdates = updateList.find(update => update.letter === prefix[0]);
-    if (letterUpdates) {
-      letterUpdates.prefixes += prefix.slice(1);
-    } else {
-      updateList.push(letterUpdates = {
-        letter,
-        shortDID: accountDetails.shortDID,
-        value,
-        prefixes: prefix.slice(1)
-      });
-      updateByLetter[letter] = letterUpdates;
-    }
-  }
-
-  return { list: updateList, byLetter: updateByLetter };
 }

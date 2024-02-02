@@ -3,12 +3,11 @@
 import React, { useMemo, useState } from 'react';
 import { letters } from '../api/indexed';
 import { Button, TextField } from '@mui/material';
-import { createOriginalMap, storeNewMap } from '../api/indexed/maps';
 import { forAwait } from '../api/forAwait';
 
 /**
  * @param {{
- *  maps: { [letter: string]: import('../api/indexed/maps').LetterMap}
+ *  maps: { [letter: string]: import('../api/indexed').CompactMap}
  * }} _
  */
 export function InitMissingMaps({ maps }) {
@@ -62,7 +61,7 @@ export function InitMissingMaps({ maps }) {
   );
 }
 
-/** @param {{ [letter: string]: import('../api/indexed/maps').LetterMap}} maps */
+/** @param {{ [letter: string]: import('../api/indexed').CompactMap}} maps */
 async function* updateMaps(maps) {
   let applyWithAuth = (auth) => { };
   let authPromise = new Promise(resolve => applyWithAuth = resolve);

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 import { forAwait } from '../api/forAwait';
 import { letters } from '../api/indexed';
-import { getCompactMaps, getMaps } from '../api/indexed/maps';
+import { getMaps } from '../api/indexed';
 import { Indexing } from './indexing';
 import { InitMissingMaps } from './init-missing-maps';
 import { LoadingMaps } from './loading-maps';
@@ -13,9 +13,9 @@ import './update.css';
 
 export function Update() {
   const [update, setUpdate] = useState(
-    /** @type {import('../api/indexed/maps').Progress<import('../api/indexed/maps').CompactMap> | undefined} */(
+    /** @type {import('../api/indexed/maps').Progress | undefined} */(
       undefined));
-  const maps = forAwait('getMaps', () => getCompactMaps(update => {
+  const maps = forAwait('getMaps', () => getMaps(update => {
     setUpdate(update);
   }));
 
@@ -43,7 +43,7 @@ function MissingMaps({ maps, mapCount }) {
 
 /**
  * @param {{
- *  maps: { [letter: string]: import('../api/indexed/maps').LetterMap<import('../api/indexed/maps').CompactMap> }
+ *  maps: { [letter: string]: import('../api/indexed/maps').CompactMap }
  * }} _ 
  */
 function LoadedMaps({ maps }) {

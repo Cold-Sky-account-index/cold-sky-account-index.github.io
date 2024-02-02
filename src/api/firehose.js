@@ -29,8 +29,7 @@ import { CarReader } from '../../node_modules/@ipld/car/src/reader-browser.js';
  *  { $type: 'app.bsky.graph.block' } & import('@atproto/api').AppBskyGraphBlock.Record |
  *  { $type: 'app.bsky.graph.list' } & import('@atproto/api').AppBskyGraphList.Record |
  *  { $type: 'app.bsky.graph.listitem' } & import('@atproto/api').AppBskyGraphListitem.Record |
- *  { $type: 'app.bsky.actor.profile' } & import('@atproto/api').AppBskyActorProfile.Record |
- *  { $type: string } & { [key: string]: any }
+ *  { $type: 'app.bsky.actor.profile' } & import('@atproto/api').AppBskyActorProfile.Record
  * )} FirehoseMessage
  */
 

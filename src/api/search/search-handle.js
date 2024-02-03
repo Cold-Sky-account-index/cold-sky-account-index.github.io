@@ -2,6 +2,7 @@
 /// <reference path="../../types.d.ts" />
 
 import { breakFeedUri, breakBskyURL, isPromise, resolveHandleOrDID, shortenDID, shortenHandle } from '..';
+import { retryFetch } from '../retryFetch';
 import { performSearchOverBuckets } from './perform-search-over-buckets';
 
 /**
@@ -124,13 +125,8 @@ function getBucket(threeLetterPrefix) {
       threeLetterPrefix.slice(0, 2) + '/' +
       threeLetterPrefix.slice(1) + '.json';
 
-    const bucket = await fetch(bucketPath)
-      .then(r => r.json())
-      .catch(err => {
-        console.warn(
-          'Failed to fetch bucket for ' + threeLetterPrefix,
-          err);
-      });
+    const bucket = await retryFetch(bucketPath)
+      .then(r => r.json());
 
     return bucket;
   })();

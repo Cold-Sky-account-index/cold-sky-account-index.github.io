@@ -15,7 +15,7 @@ import { CarReader } from '../../node_modules/@ipld/car/src/reader-browser.js';
  *   time: string,
  *   messages: FirehoseMessage[],
  *   deletes?: FirehoseMessage[],
- *   unexpected?: FirehoseMessage[]
+ *   unexpected?: { repo: string, cid: string, action: 'create' | 'delete' | 'update', path: string, $type: string }[]
  * }} FirehoseBlock
  */
 

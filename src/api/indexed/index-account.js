@@ -1,10 +1,10 @@
 // @ts-check
 
-import { letters } from '.';
+import { azLetters } from '.';
 import { resolveHandleOrDID, shortenDID } from '..';
 import { firehose } from '../firehose';
 
-/** @typedef {import('.').Letter} Letter */
+/** @typedef {import('.').AZLetter} Letter */
 
 /**
  * @typedef {{
@@ -59,7 +59,7 @@ export async function* runFirehoseAndUpdate(maps) {
 
         let anyChanges = false;
 
-        for (const letter of letters) {
+        for (const letter of azLetters) {
           const oldPrefixes = maps[letter][shortDID];
           if (!oldPrefixes) continue;
           const letterUpdate = accountUpdates.byLetter[letter];

@@ -4,30 +4,60 @@ import { breakBskyURL, shortenDID } from '..';
 import { firehose } from '../firehose';
 
 /**
+ * @typedef {{
+ *  [shortDID: string]: number | undefined, error?: undefined, errorCount?: undefined, waitUntil?: undefined } | {
+ *  error: Error,
+ *  errorCount: number,
+ *  waitUntil: number }} FirehoseShortDIDs
+ */
+
+/**
  * @param {(shortDID: string) => number} [filterShortDIDs]
+ * @returns {AsyncGenerator<FirehoseShortDIDs>}
  */
 export async function* sourceFirehose(filterShortDIDs) {
 
-  /** @type {{ [shortDID: string]: number }} */
+  /** @type {FirehoseShortDIDs} */
   let shortDIDs = {};
   let addedAny = false;
 
-  for await (const block of firehose()) {
-    if (!block?.length) continue;
+  let lastHealth = Date.now();
+  let errorCount = 0;
+  while (true) {
+    try {
+      for await (const block of firehose()) {
+        lastHealth = Date.now();
+        if (!block?.length) continue;
 
-    for (const entry of block) {
-      if (!entry.messages?.length) continue;
+        for (const entry of block) {
+          if (!entry.messages?.length) continue;
 
-      for (const msg of entry.messages) {
-        collectShortDIDs(msg);
+          for (const msg of entry.messages) {
+            collectShortDIDs(msg);
+          }
+        }
+
+        if (addedAny) {
+          /** @type {(typeof shortDIDs) & { error?: undefined, errorCount?: number, waitUntil?: undefined }} */
+          const report = shortDIDs;
+          shortDIDs = {};
+          addedAny = false;
+          yield report;
+        }
       }
-    }
+    } catch (error) {
+      errorCount++;
+      const now = Date.now();
+      let waitFor = Math.min(
+        30000,
+        Math.max(300, (now - lastHealth) / 3)
+      ) * (0.7 + Math.random() * 0.6);
 
-    if (addedAny) {
-      const report = shortDIDs;
-      shortDIDs = {};
-      addedAny = false;
-      yield report;
+      console.error('firehose error ' + errorCount + ', retry in ' + waitFor + 'ms ', error);
+
+      yield { error: /** @type {Error} */(error), errorCount, waitUntil: now + waitFor };
+
+      return new Promise(resolve => setTimeout(resolve, waitFor));
     }
   }
 

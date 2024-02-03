@@ -60,7 +60,7 @@ export function Indexing({ maps }) {
   }, [maps]);
 
   const [lastUpdateState] = useState({
-    /** @type {Partial<Record<import('../api/indexed').Letter, import('../api/indexed').IndexUpdate>> | undefined} */
+    /** @type {Partial<Record<import('../api/indexed').AZLetter, import('../api/indexed').IndexUpdate>> | undefined} */
     lastUpdate: undefined
   });
 

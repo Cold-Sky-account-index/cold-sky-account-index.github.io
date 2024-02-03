@@ -2,10 +2,10 @@
 
 import React from 'react';
 
-import { letters } from '../api/indexed';
+import { azLetters } from '../api/indexed';
 import './letter-layout.css';
 
-const lettersArray = letters.split('');
+const lettersArray = azLetters.split('');
 
 /**
  * @param {{

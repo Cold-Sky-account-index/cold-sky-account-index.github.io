@@ -1,6 +1,6 @@
 // @ts-check
 
-import { letters } from '.';
+import { azLetters } from '.';
 
 /**
  * @typedef {{ letter: string, a?: undefined } & {
@@ -38,22 +38,22 @@ const originTimestamp = 20231216;
 export async function getMaps(onprogress) {
   let completed = 0;
   /** @type {LoadingLetterMapProgress[]} */
-  const mapFetches = letters.split('').map(letter => ({ letter, state: 'loading', promise: loadLetterMap(letter) }));
+  const mapFetches = azLetters.split('').map(letter => ({ letter, state: 'loading', promise: loadLetterMap(letter) }));
   await Promise.all(mapFetches.map(f => f.state === 'loading' ? f.promise : undefined));
 
   /** @type {{ [letter: string]: OldLetterMap }} */
   const letterMap = {};
-  for (let i = 0; i < letters.length; i++) {
+  for (let i = 0; i < azLetters.length; i++) {
     const entry = mapFetches[i];
     if (entry.state !== 'loaded') continue;
-    letterMap[letters[i]] = entry.map;
+    letterMap[azLetters[i]] = entry.map;
   }
 
   return letterMap;
 
   /** @param {string} letter */
   async function loadLetterMap(letter) {
-    const letterIndex = letter.charCodeAt(0) - letters.charCodeAt(0);
+    const letterIndex = letter.charCodeAt(0) - azLetters.charCodeAt(0);
     try {
       const result = await loadLetterMapCore(letter);
       mapFetches[letterIndex] = result ?
@@ -78,15 +78,15 @@ export async function getMaps(onprogress) {
   }
 
   function updateProgress() {
-    if (completed === letters.length) return;
+    if (completed === azLetters.length) return;
     if (typeof onprogress !== 'function') return;
     const loaded = [];
     const errors = [];
     const pending = [];
     /** @type {{ [letter: string]: LoadingLetterMapProgress }} */
     const byLetter = {};
-    for (let i = 0; i < letters.length; i++) {
-      const letter = letters[i];
+    for (let i = 0; i < azLetters.length; i++) {
+      const letter = azLetters[i];
       const entry = mapFetches[i];
       byLetter[letter] = entry;
       switch (entry.state) {

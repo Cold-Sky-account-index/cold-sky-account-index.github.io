@@ -1,13 +1,13 @@
 import { loadKnownDIDs } from './known-dids';
 
 /**
- * @param {import('.').CompactMap[]} indexedMaps
+ * @param {{ [shortDID: string]: unknown }[]} indexedMaps
  */
 export async function* sourceUnindexed(indexedMaps) {
   const indexedDIDs = new Set();
   for (const map of indexedMaps) {
     for (const key in map) {
-      indexedDIDs.add(key);
+      if (map[key]) indexedDIDs.add(key);
     }
   }
 

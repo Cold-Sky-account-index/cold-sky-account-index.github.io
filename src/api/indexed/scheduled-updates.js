@@ -1,8 +1,19 @@
 // @ts-check
 
+import { resolveHandleOrDID } from '../resolve-handle-or-did';
+import { getWordStartsLowerCase } from './index-account';
 import { getMaps } from './maps';
 import { sourceFirehose } from './source-firehose';
 import { sourceUnindexed } from './source-unindexed';
+
+/**
+ * @typedef {{
+ *  letter: import('.').AZLetter,
+ *  originalMap?: import('.').CompactMap,
+ *  mapUpdates?: import('.').CompactMap,
+ *  bucketUpdates?: { [prefix: string]: string | [string, string] }
+ * }} AccountUpdateState
+ */
 
 export async function* scheduledUpdates() {
   /** @type {Map<string, number>} */
@@ -14,7 +25,10 @@ export async function* scheduledUpdates() {
 
   const maps = await getMaps();
 
-  let updates = [];
+  let updates = {
+    list: [],
+    byLetter: {}
+  };
 
   feedUnindexed();
   feedFirehose();
@@ -25,7 +39,11 @@ export async function* scheduledUpdates() {
 
     if (updates.length) {
       const report = updates;
-      updates = [];
+      updates = {
+        list: [],
+        byLetter: {}
+      };
+
       yield report;
     }
   }
@@ -35,7 +53,11 @@ export async function* scheduledUpdates() {
       const shortDID = getNextShortDID();
 
       const update = await updateIndex(shortDID);
-      
+      for (const entry of update.list) {
+        updates.list.push(entry);
+        // TODO: update byLetter too
+      }
+
     }
   }
 
@@ -74,8 +96,9 @@ export async function* scheduledUpdates() {
   }
 
   async function updateIndex(shortDID) {
+    const accountDetails = await resolveHandleOrDID(shortDID);
     const accountUpdates = indexAccountData(accountDetails);
-
+    return accountUpdates;
   }
 }
 
@@ -84,9 +107,7 @@ export async function* scheduledUpdates() {
  * @param {AccountInfo} accountDetails
  */
 function indexAccountData(accountDetails) {
-  /** @type {IndexUpdate[]} */
   const updateList = [];
-  /** @type {Partial<Record<Letter, IndexUpdate>>} */
   const updateByLetter = {};
 
   /** @type {string | [string, string]} */
@@ -98,7 +119,7 @@ function indexAccountData(accountDetails) {
   getWordStartsLowerCase(accountDetails.displayName, wordStarts);
 
   for (const prefix of wordStarts) {
-    const letter = /** @type {Letter} */(prefix[0]);
+    const letter = /** @type {import('.').AZLetter} */(prefix[0]);
     let letterUpdates = updateList.find(update => update.letter === prefix[0]);
     if (letterUpdates) {
       letterUpdates.prefixes += prefix.slice(1);
@@ -113,5 +134,8 @@ function indexAccountData(accountDetails) {
     }
   }
 
-  return { list: updateList, byLetter: updateByLetter };
+  return {
+    list: updateList,
+    byLetter: /** @type {Record<import('.').AZLetter, typeof updateList[0]>}*/(updateByLetter)
+  };
 }

@@ -1,6 +1,7 @@
 // @ts-check
 
-import { letters } from '.';
+import { azLetters } from '.';
+import { retryFetch } from '../retryFetch';
 import { webcommit } from '../webcommit';
 
 /**
@@ -29,22 +30,22 @@ import { webcommit } from '../webcommit';
 export async function getMaps(onprogress) {
   let completed = 0;
   /** @type {LoadingLetterMapProgress[]} */
-  const mapFetches = letters.split('').map(letter => ({ letter, state: 'loading', promise: loadLetterMap(letter) }));
+  const mapFetches = azLetters.split('').map(letter => ({ letter, state: 'loading', promise: loadLetterMap(letter) }));
   await Promise.all(mapFetches.map(f => f.state === 'loading' ? f.promise : undefined));
 
   /** @type {{ [letter: string]: CompactMap }} */
   const letterMap = {};
-  for (let i = 0; i < letters.length; i++) {
+  for (let i = 0; i < azLetters.length; i++) {
     const entry = mapFetches[i];
     if (entry.state !== 'loaded') continue;
-    letterMap[letters[i]] = entry.map;
+    letterMap[azLetters[i]] = entry.map;
   }
 
   return letterMap;
 
   /** @param {string} letter */
   async function loadLetterMap(letter) {
-    const letterIndex = letter.charCodeAt(0) - letters.charCodeAt(0);
+    const letterIndex = letter.charCodeAt(0) - azLetters.charCodeAt(0);
     try {
       const result = await loadLetterMapCore(letter);
       mapFetches[letterIndex] = result ?
@@ -74,15 +75,15 @@ export async function getMaps(onprogress) {
   }
 
   function updateProgress() {
-    if (completed === letters.length) return;
+    if (completed === azLetters.length) return;
     if (typeof onprogress !== 'function') return;
     const loaded = [];
     const errors = [];
     const pending = [];
     /** @type {{ [letter: string]: LoadingLetterMapProgress }} */
     const byLetter = {};
-    for (let i = 0; i < letters.length; i++) {
-      const letter = letters[i];
+    for (let i = 0; i < azLetters.length; i++) {
+      const letter = azLetters[i];
       const entry = mapFetches[i];
       byLetter[letter] = entry;
       switch (entry.state) {
@@ -92,6 +93,89 @@ export async function getMaps(onprogress) {
       }
     }
     onprogress({ loaded, errors, pending, byLetter });
+  }
+}
+
+/**
+ * @typedef {{
+ *  updated: {
+ *    letter: import('.').AZLetter,
+ *    map: CompactMap | undefined,
+ *    errorRetry?: import('../retryFetch').RetryArgs | undefined
+ * }[],
+ * all: (CompactMap | undefined)[],
+ * pending: number,
+}} MapStreamingState
+ */
+
+/**
+ * @returns {AsyncGenerator<MapStreamingState>}
+ */
+export async function* streamMaps() {
+  let resolveNext = () => { };
+  /** @type {Promise<void>} */
+  let resolvePromise = new Promise(resolve => resolveNext = resolve);
+
+  /** @type {(CompactMap | undefined)[]} */
+  const letterMaps = [];
+  /** @type {{ letter: import('.').AZLetter, map: CompactMap | undefined, errorRetry?: import('../retryFetch').RetryArgs }[]} */
+  let newLetterMaps = [];
+
+  let pending = 0;
+  for (const azLetter of azLetters) {
+    pending++;
+    loadLetterMap(azLetter);
+  }
+
+  while (pending) {
+    await resolvePromise;
+    resolvePromise = new Promise(resolve => resolveNext = resolve);
+
+    const report = { updated: newLetterMaps, all: letterMaps, pending };
+    newLetterMaps = [];
+    yield report;
+  }
+
+  /** @param {import('.').AZLetter} azLetter */
+  async function loadLetterMap(azLetter) {
+    const letterIndex = azLetter.charCodeAt(0) - azLetters.charCodeAt(0);
+    const result = await loadLetterMapCore(azLetter, retryArgs => {
+      let map = newLetterMaps.find(x => x.letter === azLetter);
+      if (map) {
+        map.errorRetry = retryArgs;
+      } else {
+        newLetterMaps.push({ letter: azLetter, map: undefined, errorRetry: retryArgs });
+      }
+      resolveNext();
+    });
+
+    letterMaps[letterIndex] = result;
+    let map = newLetterMaps.find(x => x.letter === azLetter);
+    if (map) {
+      map.errorRetry = undefined;
+      map.map = result;
+    } else {
+      newLetterMaps.push({ letter: azLetter, map: result });
+    }
+
+    pending--;
+    resolveNext();
+  }
+
+  /**
+   * @param {import('.').AZLetter} letter
+   * @param {({}: import('../retryFetch').RetryArgs) => void} onretry
+   */
+  async function loadLetterMapCore(letter, onretry) {
+    let url = `https://accounts.colds.ky/${letter}/map.json`;
+
+    const re = await retryFetch(url, {onretry});
+
+    if (re.status === 404) return;
+
+    const storedMap = await re.json();
+    const map = convertStoredMapToCompactMap(storedMap);
+    return map;
   }
 }
 
@@ -143,7 +227,7 @@ export function convertStoredMapToCompactMap(storedMap) {
 }
 
 export async function storeNewMap({ letter, map, auth }) {
-  if (letters.indexOf(letter) < 0) throw new Error(`Invalid letter: ${letter}`);
+  if (azLetters.indexOf(letter) < 0) throw new Error(`Invalid letter: ${letter}`);
 
   const storedMap = stringifyLetterMap(map);
   const commit = await webcommit({

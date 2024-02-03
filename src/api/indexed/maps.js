@@ -1,6 +1,7 @@
 // @ts-check
 
 import { azLetters } from '.';
+import { streamBuffer } from '../akpa';
 import { retryFetch } from '../retryFetch';
 import { webcommit } from '../webcommit';
 
@@ -112,6 +113,7 @@ export async function getMaps(onprogress) {
  * @returns {AsyncGenerator<MapStreamingState>}
  */
 export async function* streamMaps() {
+  return streamBuffer(/** @param {import('../akpa').StreamParameters<undefined, MapStreamingState>} stream */stream => {
   let resolveNext = () => { };
   /** @type {Promise<void>} */
   let resolvePromise = new Promise(resolve => resolveNext = resolve);
@@ -140,13 +142,17 @@ export async function* streamMaps() {
   async function loadLetterMap(azLetter) {
     const letterIndex = azLetter.charCodeAt(0) - azLetters.charCodeAt(0);
     const result = await loadLetterMapCore(azLetter, retryArgs => {
-      let map = newLetterMaps.find(x => x.letter === azLetter);
-      if (map) {
-        map.errorRetry = retryArgs;
-      } else {
-        newLetterMaps.push({ letter: azLetter, map: undefined, errorRetry: retryArgs });
-      }
-      resolveNext();
+      stream.yield(undefined, report => {
+        if (!report) report = { updated: [], all: [], pending };
+
+        let map = report.updated.find(x => x.letter === azLetter);
+        if (map) {
+          map.errorRetry = retryArgs;
+        } else {
+          report.updated.push({ letter: azLetter, map: undefined, errorRetry: retryArgs });
+        }
+        return report;
+      });
     });
 
     letterMaps[letterIndex] = result;
